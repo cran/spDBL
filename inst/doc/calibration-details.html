@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>The GP and probability model behind calibration</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">The GP and probability model behind
+calibration</h1>
+
+
+
+<p>This note explains the implementation corresponding to Sections 6 and
+7.2 of <a href="https://jmlr.org/papers/v26/22-0896.html">Banerjee et
+al. (2025)</a>. The offline predictor for autoregressive design rows is
+an additional approximation used to remove the remaining PDE
+dependency.</p>
+<div id="emulator-coefficient-sampling" class="section level2">
+<h2>Emulator coefficient sampling</h2>
+<p>The default sampling method is “marginal”, matching the
+smoothed-marginal procedure in equation (9) and Algorithm 4 of the
+paper. For each variance draw, <span class="math display">\[
+\Theta_e^{(m)}\mid\sigma^{2(m)},\mathcal D
+\sim MN(h_e,H_e,\sigma^{2(m)}R_{\rm episode}).
+\]</span> The coefficients at distinct episodes are sampled
+independently conditional on the shared variance. The resulting sampling
+law is <span class="math display">\[
+q_{\rm marginal}(\Psi\mid\mathcal D)
+=p(\sigma^2\mid\mathcal D)
+\prod_e p(\Theta_e\mid\sigma^2,\mathcal D).
+\]</span> It reproduces the smoothed marginals and does not retain the
+full posterior dependence across episode coefficients.</p>
+<p>The option sampling = “joint” instead uses the backward conditional
+law in equation (7). With <span class="math inline">\(B_e=M_eG_{e+1}^{\mathsf T}A_{e+1}^{-1}\)</span>,
+it draws <span class="math display">\[
+\Theta_e^{(m)}\mid\Theta_{e+1}^{(m)},\sigma^{2(m)},\mathcal D
+\sim MN\left(
+m_e+B_e(\Theta_{e+1}^{(m)}-a_{e+1}),
+M_e-B_eA_{e+1}B_e^{\mathsf T},
+\sigma^{2(m)}R_{\rm episode}
+\right).
+\]</span> This preserves coefficient dependence and gives the joint
+posterior sampling law <span class="math inline">\(q_{\rm
+joint}(\Psi\mid\mathcal D)=p(\Psi\mid\mathcal D)\)</span>.</p>
+<p>emulator_learn() defaults to marginal sampling. calibration_prepare()
+inherits the fitted method or resamples with an explicit sampling
+option. Saved objects record both the method and whether their samples
+are joint trajectories. The same two method choices are available for
+inverse-Wishart emulation, although calibration currently requires the
+scalar covariance model.</p>
+</div>
+<div id="two-gp-calculations" class="section level2">
+<h2>Two GP calculations</h2>
+<p>Let <span class="math inline">\(Y_e\)</span> be an <span class="math inline">\(N\times C\)</span> training response matrix for
+episode <span class="math inline">\(e\)</span>, and <span class="math inline">\(F_e\)</span> its <span class="math inline">\(N\times P\)</span> autoregressive design. For a
+fixed emulator posterior coefficient sample set <span class="math inline">\(m\)</span>, the coefficients are <span class="math inline">\(\Theta_e^{(m)}\)</span> and the variance is <span class="math inline">\(\sigma^{2(m)}\)</span>.</p>
+<p>The first GP predicts the design rows. Stack <span class="math inline">\(H=[F_1|\cdots|F_E]\)</span>, center its columns by
+<span class="math inline">\(c\)</span>, and scale active parameter
+coordinates to <span class="math inline">\([0,1]\)</span>. A shared
+squared-exponential kernel with fitted length scales and nugget
+gives</p>
+<p><span class="math display">\[
+(K_F)_{ij}=\exp\left[-\frac12\sum_d
+\frac{(x_{id}-x_{jd})^2}{\ell_d^2}\right]
++\lambda_F\mathbf 1\{i=j\}.
+\]</span></p>
+<p>With <span class="math inline">\(k_F(\eta)\)</span> the vector of
+covariances to a new input,</p>
+<p><span class="math display">\[
+\widehat h(\eta)=c^\top+k_F(\eta)^\top
+K_F^{-1}(H-\mathbf 1c^\top).
+\]</span></p>
+<p>Split this row into <span class="math inline">\(\widehat
+F_e(\eta)\)</span>. At runtime these rows require no PDE solution. Their
+GP interpolation variance is not currently propagated.</p>
+<p>The second GP is the emulator’s original residual interpolation. Its
+exponential kernel uses the original mechanistic input coordinates:</p>
+<p><span class="math display">\[
+V_{ij}=a\exp(-\phi\|\eta_i-\eta_j\|)+\delta\mathbf 1\{i=j\},
+\qquad J_i(\eta)=a\exp(-\phi\|\eta_i-\eta\|).
+\]</span></p>
+<p>The nugget is independent new-run noise and is excluded from J even
+at a coincident input. Gaussian conditioning yields</p>
+<p><span class="math display">\[
+\mu_e^{(m)}(\eta)^\top
+=\widehat F_e(\eta)\Theta_e^{(m)}
++J(\eta)^\top V^{-1}(Y_e-F_e\Theta_e^{(m)}),
+\]</span></p>
+<p><span class="math display">\[
+q(\eta)=a+\delta-J(\eta)^\top V^{-1}J(\eta).
+\]</span></p>
+<p>The development name residual_weights means <span class="math inline">\(V^{-1}(Y_e-F_e\Theta_e^{(m)})\)</span>:
+coefficients over the training parameter inputs, not weights over
+spatial locations. Shared Cholesky factors are cached; one draw’s
+residual coefficients are cached at a time.</p>
+</div>
+<div id="spatial-recovery-and-covariance" class="section level2">
+<h2>Spatial recovery and covariance</h2>
+<p>Each episode is a spatial block at an observation time. The recovery
+function places each block mean back into its original grid indices.
+This rearrangement does not estimate correlations. The full-field
+emulator covariance is supplied separately:</p>
+<p><span class="math display">\[
+\widetilde\Sigma^{(m)}(\eta)
+=\sigma^{2(m)}q(\eta)R_{\rm field}.
+\]</span></p>
+<p>Observed locations select matching entries of the mean and
+covariance. The recorded kernel scale is preserved: R_field need not
+have unit diagonal. Its amplitude and nugget must not be silently
+normalized independently of the emulator variance scale.</p>
+<p>The original exact FFBS prediction uses the smoothed coefficient
+mean. The extended function can instead condition on one fixed
+coefficient trajectory and return the conditional input covariance.
+Exact refers to Gaussian conditioning under the chosen surrogate, not an
+exact PDE solution.</p>
+</div>
+<div id="field-data-likelihood" class="section level2">
+<h2>Field-data likelihood</h2>
+<p>For the observed sites, paper Equation (27) becomes</p>
+<p><span class="math display">\[
+z_t=y_t(\eta)+u_t+\epsilon_t,\qquad
+\epsilon_t\sim N(0,\tau_t^2 I),
+\]</span></p>
+<p><span class="math display">\[
+u_t=u_{t-1}+\omega_t,\qquad
+\omega_t\sim N(0,\tau_t^2 U).
+\]</span></p>
+<p>The matrix U is a positive-definite discrepancy covariance scale; its
+diagonal need not equal one. Discrepancy increments have covariance
+tau2[t] * U, while observation errors retain covariance tau2[t] * I. It
+is distinct from the emulator covariance R_field. Initial states use
+<span class="math inline">\(u_0\mid\tau_0^2\sim
+N(m_0,\tau_0^2M_0)\)</span> and <span class="math inline">\(\tau_0^2\sim
+IG(n_0,d_0)\)</span>. Subsequently <span class="math inline">\(\tau_t^2\sim IG(b^t n_0,b^t d_0)\)</span>, with
+the shape–scale inverse-gamma convention <span class="math inline">\(p(v)\propto v^{-a-1}\exp(-d/v)\)</span>. Stan
+samples reciprocal variances using the equivalent shape–rate gamma.</p>
+<p>Integrating out the Gaussian emulator field gives</p>
+<p><span class="math display">\[
+z_t\mid\eta,u_t,\tau_t^2,\Psi^{(m)}
+\sim N\left(\mu_t^{(m)}(\eta)+u_t,\,
+\widetilde\Sigma^{(m)}(\eta)+\tau_t^2 I\right).
+\]</span></p>
+<p>The observed input is z. It is not replaced by the GP prediction.
+Conditional emulator errors are independent across observation times
+given the fixed coefficient sample set. The joint sampling option
+preserves dependence between coefficients from different episodes. The
+marginal option retains the smoothed marginal distributions conditional
+on the shared variance.</p>
+</div>
+<div id="marginal-discrepancy-sampling" class="section level2">
+<h2>Marginal discrepancy sampling</h2>
+<p>The joint Stan program samples discrepancy innovations. The default
+marginal program integrates discrepancy states out exactly. Starting at
+<span class="math inline">\(a_0=m_0\)</span>, <span class="math inline">\(C_0=\tau_0^2M_0\)</span>, the Kalman recursion
+is</p>
+<p><span class="math display">\[
+P_t=C_{t-1}+\tau_t^2U,\quad
+Q_t=P_t+\widetilde\Sigma^{(m)}(\eta)+\tau_t^2 I,\quad
+e_t=z_t-\mu_t^{(m)}(\eta)-a_{t-1},
+\]</span></p>
+<p><span class="math display">\[
+a_t=a_{t-1}+P_tQ_t^{-1}e_t,\qquad
+C_t=P_t-P_tQ_t^{-1}P_t.
+\]</span></p>
+<p>Its log likelihood is</p>
+<p><span class="math display">\[
+-\frac12\sum_t\left[n\log(2\pi)+\log|Q_t|+e_t^\top Q_t^{-1}e_t\right].
+\]</span></p>
+<p>Gaussian backward sampling subsequently recovers coherent discrepancy
+paths. The joint and marginal programs target the same conditional
+calibration model.</p>
+</div>
+<div id="modular-posterior-pooling" class="section level2">
+<h2>Modular posterior pooling</h2>
+<p>For emulator parameters <span class="math inline">\(\Psi\)</span> and
+selected sampling law <span class="math inline">\(q_s\)</span>, pooling
+uses</p>
+<p><span class="math display">\[
+p_{\rm mod}^{(s)}(\vartheta\mid z,\mathcal D)
+=\int p(\vartheta\mid z,\Psi,\mathcal D)
+       q_s(\Psi\mid\mathcal D)\,d\Psi
+\approx \frac1M\sum_m p(\vartheta\mid z,\Psi^{(m)},\mathcal D).
+\]</span></p>
+<p>Each conditional distribution is normalized separately. Equal numbers
+of retained samples are pooled. A single model using an averaged
+likelihood would generally reweight emulator draws according to their
+field-data evidence and target a different posterior.</p>
+<p>Here s denotes the selected emulator sampling method. Joint sampling
+uses the full emulator posterior in equation (29); marginal sampling
+uses the product of smoothed conditional marginals defined above.
+Pooling follows the selected law in both cases.</p>
+<p>There are two sampling dimensions: the number of emulator
+trajectories and the number of calibration transitions conditional on
+each trajectory. The package defaults to one calibration chain with iter
+= 1, warmup = 0, and one retained sample per emulator draw. Larger
+iteration counts are options; warmup defaults to floor(iter / 2) and the
+retained count defaults to at most 200 available samples per emulator
+draw. The controls disable adaptation for zero warmup and enable it for
+positive warmup.</p>
+<p>Convergence must be assessed within each conditional fit. One
+transition from each of 500 initial states is not a converged
+approximation of this integral.</p>
+</div>
+<div id="uncertainty-and-limitations" class="section level2">
+<h2>Uncertainty and limitations</h2>
+<p>The implementation retains coefficient samples, emulator variance,
+conditional GP prediction error, dynamic discrepancy, and independent
+measurement error. For fixed eta before observing field data, emulator
+uncertainty decomposes as</p>
+<p><span class="math display">\[
+\operatorname{Var}(y_t\mid\mathcal D)
+=E_\Psi[\widetilde\Sigma_\Psi]
++\operatorname{Var}_\Psi[\mu_{t,\Psi}].
+\]</span></p>
+<p>Uncertainty in the fitted design GP mean is excluded. Under an
+additional independence assumption, a design error covariance <span class="math inline">\(C_F(\eta)\)</span> would contribute <span class="math inline">\(\Theta_e^\top C_F(\eta)\Theta_e\)</span> to output
+covariance; a full extension would also need to specify dependence
+between design components and residual errors.</p>
+<p>The initial public calibration interface supports the sigma2R
+emulator, fixed discrepancy covariance scale, finite complete
+observation matrices, and subsets of the original time/grid setup. It
+does not silently convert an inverse-Wishart fit, fill missing
+observations, or forecast new sites or times.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

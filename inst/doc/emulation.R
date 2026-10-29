@@ -4,6 +4,7 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 
+
 ## ----setup--------------------------------------------------------------------
 require(spDBL)
 require(magrittr)
@@ -30,6 +31,7 @@ emulator <- emulator_learn(pde_para_train = pde_para_train,
                          # dt_pde_test = dt_pde_test, 
                          Nx = Nx,
                          Ny = Ny)
+emulator$setup$sampling_method
 
 res_pre_exact <- emulator_predict(emulator = emulator,
                  input_new = pde_para_test,
